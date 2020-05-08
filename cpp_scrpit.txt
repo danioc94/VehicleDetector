@@ -1,0 +1,170 @@
+#include "opencv2/imgproc.hpp"
+#include <opencv2/core/core.hpp>
+#include "opencv2/highgui.hpp"
+#include "opencv2/opencv.hpp"
+#include <math.h>
+#include <iostream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <opencv2/ml/ml.hpp>
+
+
+using namespace cv;
+using namespace std;
+using namespace ml;
+using namespace cv::ml;
+
+int main(int argc, char* argv[])
+{
+
+    //-----------------------------HOG!------------------------------
+    vector< vector < float> > v_descriptorsValues;
+    vector< vector < Point> > v_locations;
+
+    //Ajustar Numero de datos!!!!!!!:
+    int FileNum=150;
+
+    for(int i=1; i<=FileNum; ++i)
+    {
+      // Lectura archivos
+      char im[5];
+      char nom[3];
+      strcpy(im,"im");
+      itoa(i,nom,10);
+      strcat(im,nom);
+      strcat(im,".jpg");
+
+      //read image file
+      Mat img, img_gray;
+      img = imread(im);
+
+      //imshow("Imagen de entrada",img);
+
+      resize(img, img, Size(64,32) ); //Size(64,48) ); //Size(32*2,16*2)); //Size(80,72) );
+      //gray
+      //cvtColor(img, img_gray, CV_RGB2GRAY);
+      //imshow("Resize",img);
+
+      HOGDescriptor d( Size(64,32), Size(32,32), Size(32,32), Size(16,16), 9);
+      vector< float> descriptorsValues;
+      vector< Point> locations;
+      d.compute( img, descriptorsValues, Size(0,0), Size(0,0), locations);
+
+      //printf("descriptor number =%d\n", descriptorsValues.size() );
+      v_descriptorsValues.push_back( descriptorsValues );
+      v_locations.push_back( locations );
+      //show image
+      //imshow("origin", img);
+
+      waitKey(0);
+    }
+    cout<<"fin HOG"<<endl;
+
+/*
+    for(int i=0;i<v_descriptorsValues.size(); i++)
+    {
+        for (int j=0;j<v_descriptorsValues[i].size(); j++)
+        {
+            cout << v_descriptorsValues[i][j] << " ";
+        }
+        cout << endl<<endl;
+    }
+*/
+
+    int CantFeatures=v_descriptorsValues[0].size();
+    int CantDatos=v_descriptorsValues.size();
+    cout<<"Features: "<<CantFeatures<<endl;
+    cout<<"Datos: "<<CantDatos<<endl<<endl;
+
+
+    //-----------------------------ANN-------------------------------
+
+    // Set up training data
+    float trainingData[CantDatos][CantFeatures];
+    int etiquetas[CantDatos]={1,1,-1,1,-1,-1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,1,1,1,1,-1,1,-1,-1,-1,-1,-1,1,-1,1,1,1,-1,1,1,-1,-1,-1,-1,1,1,-1,-1,1,1,-1,-1,-1,-1,1,1,1,-1,1,-1,1,-1,1,-1,-1,-1,-1,1,1,-1,-1,-1,-1,1,1,-1,-1,-1,1,1,1,-1,-1,1,-1,-1,1,1,-1,-1,1,-1,1,-1,-1,-1,-1,1,-1,1,-1,1,-1,-1,1,1,1,-1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,-1,1,1,1,-1,-1,-1,-1,-1,1,1,1,-1,-1,-1,1,-1,1,-1,1,-1,-1,-1,1,1,1,1,-1,1,-1,-1,1,1};
+    for (int i=0;i<CantDatos;i++)
+    {
+        for (int j=0;j<CantFeatures;j++)
+        {
+            //cout<<"Me Mori:"<<i<<" "<<j<<endl;
+            trainingData[i][j]=v_descriptorsValues[i][j];
+            //cout<<trainingData[i][j]<<" ";
+        }
+        //cout<<endl<<endl;
+    }
+
+    Mat trainingDataMat(CantDatos, CantFeatures, CV_32FC1, trainingData);
+
+    //Etiquetas:
+    Mat_<float> responses(CantDatos, 2);
+    for (int i = 0; i<CantDatos; ++i)
+    {
+        if (etiquetas[i]==1)
+        {
+            responses(i, 0) = 1;
+            responses(i, 1) = -1;
+        }
+        else
+        {
+            responses(i, 0) = -1;
+            responses(i, 1) = 1;
+        }
+        //cout<<i+1<<": "<<responses.row(i)<<endl;
+    }
+
+    //create the neural network
+    Mat_<int> layerSizes(1, 4);
+    layerSizes(0, 0) = CantFeatures;
+    layerSizes(0, 1) = 64;
+    layerSizes(0, 2) = 32;
+    layerSizes(0, 3) = responses.cols;
+
+    Ptr<ANN_MLP> network = ANN_MLP::create();
+    network->setLayerSizes(layerSizes);
+    network->setActivationFunction(ANN_MLP::SIGMOID_SYM, 1, 1);
+    network->setTrainMethod(ANN_MLP::BACKPROP, 0.1, 0.1);
+    Ptr<TrainData> trainData = TrainData::create(trainingDataMat, ROW_SAMPLE, responses);
+
+    network->train(trainData);
+
+    double ErrorTrain=0;
+    int a=0;
+
+    if (network->isTrained())
+    {
+        Mat result;
+        vector<float*> salida;
+        float arreglo[CantDatos];
+        //printf("Predict training data:\n");
+        for (int i=0; i<CantDatos; ++i)
+        {
+            network->predict(trainingDataMat.row(i), result);
+            //cout << result << endl;
+            salida.push_back((float*)(result.data + i * result.step));
+            arreglo[i]=salida[0][0];
+        }
+
+        cout<<endl;
+        for (int i=0;i<CantDatos;i++)
+        {
+            //cout<<"im"<<i+1<<": "<<int(round(arreglo[i]))<<" : "<<etiquetas[i]<<endl;
+            a=int(round(arreglo[i]));
+            if(a==etiquetas[i])
+                ErrorTrain=ErrorTrain+1;
+        }
+/*
+        printf("Predict one-vector:\n");
+        network->predict(trainingDataMat.row(0), result);
+        cout << result << endl;
+        */
+
+    }
+
+    double ErrorT=(ErrorTrain/CantDatos)*100;
+    cout<<"Exactitud de entrenamiento: "<<ErrorT<<"%"<<endl;
+
+
+    return 0;
+}
+
