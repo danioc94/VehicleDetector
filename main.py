@@ -31,9 +31,11 @@ for im in positives:
 
 # View resized:
 resized = resize(positives)
+'''
 for im in resized:
     cv2.imshow('Positive', im)
     cv2.waitKey()
+'''
 
 # HOG
 winSize = (64, 32)
@@ -43,3 +45,4 @@ cellSize = (16, 16)  # h x w in pixels
 nbins = 9  # number of orientation bins
 
 hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
+hog_feats = hog.compute(resized[0])
