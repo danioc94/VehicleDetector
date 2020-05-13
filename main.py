@@ -59,5 +59,6 @@ for im in range(len(resized)):
 
 print("Hog feats: ", hog_feats)
 print("Hog feats type: ", type(hog_feats))
-#print("Hog feats[0]: ", hog_feats[0])
+print("Hog feats[0]: ", hog_feats[0][0][0])
+print("Hog feats[1]: ", hog_feats[1][0])
 print("Hog feats[0] type: ", type(hog_feats[0]))
