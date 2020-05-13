@@ -37,12 +37,27 @@ for im in resized:
     cv2.waitKey()
 '''
 
-# HOG
+# HOG parameters:
 winSize = (64, 32)
 blockSize = (32, 32)  # h x w in cells
 blockStride = (32, 32)
 cellSize = (16, 16)  # h x w in pixels
 nbins = 9  # number of orientation bins
 
+# HOG computation
 hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
-hog_feats = hog.compute(resized[0])
+#hog_feats = hog.compute(resized[0])
+#print(hog_feats)
+
+hog_feats = []
+print("Length resized: ", len(resized))
+
+
+for im in range(len(resized)):
+    im_feature = hog.compute(resized[im])
+    hog_feats.append(im_feature)
+
+print("Hog feats: ", hog_feats)
+print("Hog feats type: ", type(hog_feats))
+#print("Hog feats[0]: ", hog_feats[0])
+print("Hog feats[0] type: ", type(hog_feats[0]))
