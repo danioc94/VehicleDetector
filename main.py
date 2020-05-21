@@ -1,5 +1,6 @@
 import cv2
 import os
+import numpy as np
 
 def load_images_from_folder(folder):
     images = []
@@ -20,6 +21,9 @@ def resize(images):
 
 pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
 positives = load_images_from_folder(pos_folder)
+
+neg_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Negative'
+negatives = load_images_from_folder(neg_folder)
 
 # View positives:
 '''
@@ -46,19 +50,29 @@ nbins = 9  # number of orientation bins
 
 # HOG computation
 hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
-#hog_feats = hog.compute(resized[0])
-#print(hog_feats)
-
 hog_feats = []
-print("Length resized: ", len(resized))
-
 
 for im in range(len(resized)):
     im_feature = hog.compute(resized[im])
     hog_feats.append(im_feature)
 
+'''
 print("Hog feats: ", hog_feats)
 print("Hog feats type: ", type(hog_feats))
 print("Hog feats[0]: ", hog_feats[0][0][0])
 print("Hog feats[1]: ", hog_feats[1][0])
 print("Hog feats[0] type: ", type(hog_feats[0]))
+'''
+
+# ANN Setup:
+ann = cv2.ml.ANN_MLP_create()
+ann.setLayerSizes(np.array([10, 64, 32, 2], dtype=np.uint8))
+ann.setTrainMethod(cv2.ml.ANN_MLP_BACKPROP)
+
+# ANN Training:
+ann.train(hog_feats,
+  np.array([[1, 1, 1, 1, 0, 1, 1, 0, 0, 1]], dtype=np.float32), None)
+
+# ANN Predict:
+#result = ann.predict(np.array([[1.4, 1.5, 1.2, 2., 2.5, 2.8, 3., 3.1, 3.8]], dtype=np.float32))
+#print(result)
