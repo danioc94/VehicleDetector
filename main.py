@@ -16,14 +16,27 @@ def resize(images):
     for im in images:
         i = cv2.resize(im, (64,32))
         resized.append(i)
-
     return resized
+
+def training_data(positives, negatives):
+    trainImages = positives + negatives
+    trainLables = []
+    for i in range(len(trainImages)):
+        if i < 10:
+            trainLables.append(1)
+        else:
+            trainLables.append(-1)
+    return trainImages, trainLables
 
 pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
 positives = load_images_from_folder(pos_folder)
 
 neg_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Negative'
 negatives = load_images_from_folder(neg_folder)
+
+# Training images and labels:
+trainImages, trainLables = training_data(positives, negatives)
+print("Trainlables: ", trainLables)
 
 # View positives:
 '''
@@ -34,7 +47,7 @@ for im in positives:
 '''
 
 # View resized:
-resized = resize(positives)
+resized = resize(trainImages)
 '''
 for im in resized:
     cv2.imshow('Positive', im)
@@ -70,8 +83,7 @@ ann.setLayerSizes(np.array([10, 64, 32, 2], dtype=np.uint8))
 ann.setTrainMethod(cv2.ml.ANN_MLP_BACKPROP)
 
 # ANN Training:
-ann.train(hog_feats,
-  np.array([[1, 1, 1, 1, 0, 1, 1, 0, 0, 1]], dtype=np.float32), None)
+ann.train(np.array([[1, 1, 1, 1, 0, 1, 1, 0, 0, 1]], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[0, 0, 0, 0, 0, 1, 0, 0, 0]], dtype=np.float32))
 
 # ANN Predict:
 #result = ann.predict(np.array([[1.4, 1.5, 1.2, 2., 2.5, 2.8, 3., 3.1, 3.8]], dtype=np.float32))
