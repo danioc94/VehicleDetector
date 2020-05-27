@@ -72,7 +72,7 @@ for im in range(len(test_resized)):
     im_feature = hog.compute(test_resized[im])
     hog_test_feats.append(im_feature)
 #HOG_test = hog.compute(test_resized)
-print("HOG Test: ", hog_test_feats)
+print("HOG Test: ", hog_test_feats[0])
 
 '''
 print("Hog feats: ", hog_feats)
@@ -103,10 +103,15 @@ for sample in range(len(hog_feats)):
 HOG_test_Data = []
 
 for sample in range(len(hog_test_feats)):
+    print("sample: ", sample)
     HOG_Row = []
+    print("HOG Row: ", HOG_Row)
     for feature in range(len(hog_test_feats[sample])):
         HOG_Row.append(hog_test_feats[sample][feature][0])
-        HOG_test_Data.append(HOG_Row)
+        #print("HOG Row in: ", HOG_Row)
+    HOG_test_Data.append(HOG_Row)
+
+print("HOG test data: ", HOG_test_Data)
 
 #print("HOG_Data: ", HOG_Data)
 
@@ -119,10 +124,10 @@ numpyArray = np.array([[1, 1, 1, 1, 0, 1, 1, 0, 0, 1]], dtype=np.float32)
 #print("numpyArray type: ", type(numpyArray))
 
 # ANN Training:
-#ann.train(np.array([example], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
 for sample in HOG_Data:
     ann.train(np.array([sample], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
 
 # ANN Predict:
-result = ann.predict(np.array([HOG_test_Data[0]], dtype=np.float32))
-print("Result: ", result)
+for sample in HOG_test_Data:
+    result = ann.predict(np.array([sample], dtype=np.float32))
+    print("Result: ", result)
