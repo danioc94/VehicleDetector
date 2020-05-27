@@ -38,13 +38,10 @@ negatives = load_images_from_folder(neg_folder)
 trainImages, trainLables = training_data(positives, negatives)
 print("Trainlables: ", trainLables)
 
-# View positives:
-'''
-for im in positives:
-    cv2.imshow('Positive', im)
-    cv2.waitKey()
-#print(images)
-'''
+#Test image:
+test_folder = '/home/daniel/Documents/Repositories/VehicleDetector/test'
+test = load_images_from_folder(test_folder)
+test_resized = resize(test)
 
 # View resized:
 resized = resize(trainImages)
@@ -69,6 +66,14 @@ for im in range(len(resized)):
     im_feature = hog.compute(resized[im])
     hog_feats.append(im_feature)
 
+# Compute HOG for test image:
+hog_test_feats = []
+for im in range(len(test_resized)):
+    im_feature = hog.compute(test_resized[im])
+    hog_test_feats.append(im_feature)
+#HOG_test = hog.compute(test_resized)
+print("HOG Test: ", hog_test_feats)
+
 '''
 print("Hog feats: ", hog_feats)
 #print("Hog feats type: ", type(hog_feats))
@@ -85,6 +90,26 @@ for i in range(len(hog_feats[0])):
     example.append(hog_feats[0][i][0])
 #print("example: ", example)
 
+# Adjusting data for neural net:
+HOG_Data = []
+
+for sample in range(len(hog_feats)):
+    HOG_Row = []
+    for feature in range(len(hog_feats[sample])):
+        HOG_Row.append(hog_feats[sample][feature][0])
+        HOG_Data.append(HOG_Row)
+
+# Adjusting test data for neral net:
+HOG_test_Data = []
+
+for sample in range(len(hog_test_feats)):
+    HOG_Row = []
+    for feature in range(len(hog_test_feats[sample])):
+        HOG_Row.append(hog_test_feats[sample][feature][0])
+        HOG_test_Data.append(HOG_Row)
+
+#print("HOG_Data: ", HOG_Data)
+
 # ANN Setup:
 ann = cv2.ml.ANN_MLP_create()
 ann.setLayerSizes(np.array([featureLength, 64, 32, 2], dtype=np.uint8))
@@ -94,8 +119,10 @@ numpyArray = np.array([[1, 1, 1, 1, 0, 1, 1, 0, 0, 1]], dtype=np.float32)
 #print("numpyArray type: ", type(numpyArray))
 
 # ANN Training:
-ann.train(np.array([example], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
+#ann.train(np.array([example], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
+for sample in HOG_Data:
+    ann.train(np.array([sample], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
 
 # ANN Predict:
-#result = ann.predict(np.array([[1.4, 1.5, 1.2, 2., 2.5, 2.8, 3., 3.1, 3.8]], dtype=np.float32))
-#print(result)
+result = ann.predict(np.array([HOG_test_Data[0]], dtype=np.float32))
+print("Result: ", result)
