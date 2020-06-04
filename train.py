@@ -122,3 +122,6 @@ for sample in HOG_Data:
 for sample in HOG_test_Data:
     result = ann.predict(np.array([sample], dtype=np.float32))
     print("Result: ", result)
+
+# Saving model:
+ann.save("ann_model")
