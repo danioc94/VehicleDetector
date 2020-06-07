@@ -28,16 +28,17 @@ def training_data(positives, negatives):
         if r <0.5:
             try: 
                 trainImages.append(positives.pop())
-                trainLables.append(1)
+                trainLables.append([1, 0])
             except:
                 pass
         else:
             try:
                 trainImages.append(negatives.pop())
-                trainLables.append(-1)
+                trainLables.append([0, 1])
             except:
                 pass
     print("length lables: ", len(trainLables))
+    #print("Lables: ", trainLables)
     return trainImages, trainLables
 
 #pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
@@ -52,13 +53,14 @@ negatives = load_images_from_folder(neg_folder)
 trainImages, trainLables = training_data(positives, negatives)
 #print("Trainlables: ", trainLables)
 
-#Test image:
+# Resizing training image:
+resized = resize(trainImages)
+
+# Test images:
 test_folder = '/home/daniel/Documents/Repositories/VehicleDetector/test'
 test = load_images_from_folder(test_folder)
 test_resized = resize(test)
 
-# View resized:
-resized = resize(trainImages)
 '''
 for im in resized:
     cv2.imshow('Positive', im)
@@ -94,14 +96,7 @@ print("Hog feats[0]: ", hog_feats[0])
 print("Hog feats[0][0][0]: ", hog_feats[0][0][0])
 print("Hog feats[1][0]: ", hog_feats[1][0])
 print("Hog feats[0] type: ", type(hog_feats[0]))
-print("Feature length: ", featureLength)
 '''
-
-featureLength = len(hog_feats[0])
-example = []
-for i in range(len(hog_feats[0])):
-    example.append(hog_feats[0][i][0])
-#print("example: ", example)
 
 # Adjusting data for neural net:
 HOG_Data = []
@@ -112,6 +107,16 @@ for sample in range(len(hog_feats)):
         HOG_Data.append(HOG_Row)
 #print("HOG_Data: ", HOG_Data)
 
+# ANN Setup:
+featureLength = len(hog_feats[0])
+ann = cv2.ml.ANN_MLP_create()
+ann.setLayerSizes(np.array([featureLength, 64, 32, 2], dtype=np.uint8))
+ann.setTrainMethod(cv2.ml.ANN_MLP_BACKPROP)
+
+# ANN Training:
+for sample in range(len(trainLables)):
+    ann.train(np.array([HOG_Data[sample]], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([trainLables[sample]], dtype=np.float32))
+
 # Adjusting test data for neral net:
 HOG_test_Data = []
 for sample in range(len(hog_test_feats)):
@@ -120,15 +125,6 @@ for sample in range(len(hog_test_feats)):
         HOG_Row.append(hog_test_feats[sample][feature][0])
     HOG_test_Data.append(HOG_Row)
 #print("HOG test data: ", HOG_test_Data)
-
-# ANN Setup:
-ann = cv2.ml.ANN_MLP_create()
-ann.setLayerSizes(np.array([featureLength, 64, 32, 2], dtype=np.uint8))
-ann.setTrainMethod(cv2.ml.ANN_MLP_BACKPROP)
-
-# ANN Training:
-for sample in HOG_Data:
-    ann.train(np.array([sample], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([[1, 0]], dtype=np.float32))
 
 # ANN Predict:
 for sample in HOG_test_Data:
