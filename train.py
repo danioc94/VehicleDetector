@@ -1,6 +1,7 @@
 import cv2
 import os
 import numpy as np
+import random
 
 def load_images_from_folder(folder):
     images = []
@@ -19,13 +20,24 @@ def resize(images):
     return resized
 
 def training_data(positives, negatives):
-    trainImages = positives + negatives
+    trainImages = []
     trainLables = []
-    for i in range(len(trainImages)):
-        if i < 500:
-            trainLables.append(1)
+
+    while positives or negatives:
+        r = random.random()
+        if r <0.5:
+            try: 
+                trainImages.append(positives.pop())
+                trainLables.append(1)
+            except:
+                pass
         else:
-            trainLables.append(-1)
+            try:
+                trainImages.append(negatives.pop())
+                trainLables.append(-1)
+            except:
+                pass
+    print("length lables: ", len(trainLables))
     return trainImages, trainLables
 
 #pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
@@ -33,7 +45,7 @@ pos_folder = '/home/daniel/Documents/CarImages/Positive'
 positives = load_images_from_folder(pos_folder)
 
 #neg_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Negative'
-neg_folder = '/home/daniel/Documents/CarImages/Negative'
+neg_folder = '/home/daniel/Documents/CarImages/Negative2'
 negatives = load_images_from_folder(neg_folder)
 
 # Training images and labels:
