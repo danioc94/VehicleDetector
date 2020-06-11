@@ -39,12 +39,12 @@ def training_data(positives, negatives):
     return trainImages, trainLables
 
 #pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
-pos_folder = '/home/daniel/Documents/CarImages/Positive'
+pos_folder = '/home/daniel/Documents/CarImages/Positive100'
 positives = load_images_from_folder(pos_folder)
 print("Loading positive images finised")
 
 #neg_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Negative'
-neg_folder = '/home/daniel/Documents/CarImages/Negative2'
+neg_folder = '/home/daniel/Documents/CarImages/Negative100'
 negatives = load_images_from_folder(neg_folder)
 print("Loading negative images finised")
 
@@ -77,7 +77,6 @@ nbins = 9  # number of orientation bins
 # HOG computation for training images:
 hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
 hog_feats = []
-
 for im in range(len(resized)):
     im_feature = hog.compute(resized[im])
     hog_feats.append(im_feature)
@@ -94,7 +93,7 @@ for sample in range(len(hog_feats)):
     HOG_Row = []
     for feature in range(len(hog_feats[sample])):
         HOG_Row.append(hog_feats[sample][feature][0])
-        HOG_Data.append(HOG_Row)
+    HOG_Data.append(HOG_Row)
 
 # ANN Setup:
 featureLength = len(hog_feats[0])
