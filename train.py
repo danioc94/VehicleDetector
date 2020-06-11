@@ -38,12 +38,10 @@ def training_data(positives, negatives):
                 pass
     return trainImages, trainLables
 
-#pos_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Positive'
 pos_folder = '/home/daniel/Documents/CarImages/Positive100'
 positives = load_images_from_folder(pos_folder)
 print("Loading positive images finised")
 
-#neg_folder = '/home/daniel/Documents/Repositories/VehicleDetector/train/Negative'
 neg_folder = '/home/daniel/Documents/CarImages/Negative100'
 negatives = load_images_from_folder(neg_folder)
 print("Loading negative images finised")
@@ -56,7 +54,7 @@ trainImages, trainLables = training_data(positives, negatives)
 resized = resize(trainImages)
 
 # Test images:
-test_folder = '/home/daniel/Documents/Repositories/VehicleDetector/test'
+test_folder = '/home/daniel/Repositories/VehicleDetector/test'
 test = load_images_from_folder(test_folder)
 print("Loading test images finised")
 test_resized = resize(test)
