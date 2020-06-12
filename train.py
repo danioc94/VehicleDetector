@@ -103,7 +103,7 @@ ann.setTrainMethod(cv2.ml.ANN_MLP_BACKPROP)
 for sample in range(len(trainLables)):
     ann.train(np.array([HOG_Data[sample]], dtype=np.float32), cv2.ml.ROW_SAMPLE, np.array([trainLables[sample]], dtype=np.float32))
 
-# Adjusting test data for neral net:
+# Adjusting test data for neral net prediction:
 HOG_test_Data = []
 for sample in range(len(hog_test_feats)):
     HOG_Row = []
